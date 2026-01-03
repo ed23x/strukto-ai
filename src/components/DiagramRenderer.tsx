@@ -49,57 +49,50 @@ export const DiagramRenderer: React.FC<DiagramRendererProps> = ({
     case "if":
       return (
         <div className={cn("flex flex-col w-full border-b-2 last:border-b-0", BorderClass)}>
-          {/* Header with diagonal */}
-          <div className={cn("relative h-24 w-full border-b-2 overflow-hidden", BorderClass)}>
+          {/* Header with triangle split */}
+          <div className={cn("relative h-20 w-full border-b-2 overflow-hidden bg-gray-50/50 dark:bg-white/5", BorderClass)}>
             <svg
               className="absolute inset-0 w-full h-full pointer-events-none"
               preserveAspectRatio="none"
+              viewBox="0 0 100 100"
             >
-              {/* Draw lines from top-left and top-right to bottom-center for a triangle look? 
-                  Or simple diagonal? Let's do the classic 3-triangle split.
-                  Line 1: Top-Left to Bottom-Center? 
-                  Line 2: Top-Right to Bottom-Center?
-                  No, standard is usually a box with diagonal lines. 
-                  Let's do: Line from Top-Left to Bottom-Right?
-                  Actually, let's just do a simple header box for readability for now, 
-                  and maybe upgrade to diagonal later if requested. 
-                  The user asked for "Struktogramme", so I should try.
-                  
-                  Let's try a simple diagonal from Top-Left to Bottom-Right.
-               */}
+               {/* Left diagonal to bottom center */}
                <line
                  x1="0"
                  y1="0"
-                 x2="100%"
-                 y2="100%"
+                 x2="50"
+                 y2="100"
                  stroke="currentColor"
                  strokeWidth="1.5"
                  className={TextClass}
+                 vectorEffect="non-scaling-stroke"
                />
-                 <line
+               {/* Right diagonal to bottom center */}
+               <line
                  x1="100%"
                  y1="0"
-                 x2="0"
-                 y2="100%"
+                 x2="50"
+                 y2="100"
                  stroke="currentColor"
                  strokeWidth="1.5"
                  className={TextClass}
+                 vectorEffect="non-scaling-stroke"
                />
             </svg>
             
             {/* Condition Text (Top Center) */}
-            <div className="absolute inset-x-0 top-1 flex justify-center">
-              <span className="bg-background px-1 font-bold z-10">{node.condition}</span>
+            <div className="absolute inset-x-0 top-2 flex justify-center text-center px-10">
+              <span className="font-bold z-10 break-words">{node.condition}</span>
             </div>
 
-            {/* True Label (Left) */}
-            <div className="absolute left-2 bottom-1">
-               <span className="font-bold text-green-600 dark:text-green-400">True</span>
+            {/* True Label (Top Left cornerish) */}
+            <div className="absolute left-3 top-8">
+               <span className="font-bold text-xs text-green-600 dark:text-green-400">T</span>
             </div>
 
-             {/* False Label (Right) */}
-            <div className="absolute right-2 bottom-1">
-               <span className="font-bold text-red-600 dark:text-red-400">False</span>
+             {/* False Label (Top Right cornerish) */}
+            <div className="absolute right-3 top-8">
+               <span className="font-bold text-xs text-red-600 dark:text-red-400">F</span>
             </div>
           </div>
 
