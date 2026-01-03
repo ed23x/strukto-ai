@@ -66,7 +66,14 @@ export default function Home() {
     if (!node) return;
 
     try {
-      const dataUrl = await toPng(node, { backgroundColor: theme === 'dark' ? '#000' : '#fff' });
+      const dataUrl = await toPng(node, { 
+        backgroundColor: theme === 'dark' ? '#09090b' : '#fff',
+        style: {
+          overflow: 'visible',
+          height: 'auto',
+          width: 'auto',
+        }
+      });
       const link = document.createElement("a");
       link.download = `${title.replace(/\s+/g, "_")}.png`;
       link.href = dataUrl;
