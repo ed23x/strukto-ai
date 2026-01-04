@@ -1,22 +1,28 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { Diagram, DiagramResponse } from "@/types/diagram";
 import { DiagramRenderer } from "@/components/DiagramRenderer";
 import { toPng } from "html-to-image";
 import { toast } from "sonner";
-import { 
-  Moon, 
-  Sun, 
-  Download, 
-  Play, 
-  Settings, 
-  Loader2, 
+import Link from "next/link";
+import {
+  Moon,
+  Sun,
+  Download,
+  Play,
+  Settings,
+  Loader2,
   FileCode,
-  Image as ImageIcon
+  Image as ImageIcon,
+  User,
+  LogIn
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { register } from "@teamhanko/hanko-elements";
+
+const hankoApi = process.env.NEXT_PUBLIC_HANKO_API_URL || "";
 
 export default function Home() {
   const { theme, setTheme } = useTheme();
@@ -25,6 +31,19 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [apiKey, setApiKey] = useState("");
   const [showSettings, setShowSettings] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+      // Check if user is logged in via Hanko cookie/local storage check or just basic presence
+      // For proper check we might need the hanko-sdk but sticking to elements is lighter.
+      // We can check if the 'hanko' cookie exists or similar.
+      // A simple way is to use the hanko-elements 'hanko-profile' component or just check cookies.
+      // For now, let's just show 'Login' button. If they are logged in, the backend handles the linking.
+      // To show "My Profile" vs "Login", we can check document.cookie for 'hanko'.
+      if (document.cookie.includes("hanko")) {
+          setIsLoggedIn(true);
+      }
+  }, []);
 
   // Generate Diagrams
   const handleGenerate = async () => {
@@ -35,9 +54,24 @@ export default function Home() {
 
     setLoading(true);
     try {
+      // Get Auth Token from Hanko Cookie if exists
+      // Hanko stores JWT in a cookie named 'hanko'. We need to extract it to send as Bearer.
+      // However, if we are same-domain, cookies are sent automatically.
+      // BUT, fetch calls don't send cookies by default unless credentials: 'include'.
+      // AND, Next.js API might need it in Authorization header if we are doing Bearer check.
+      // Let's try to get it from the cookie.
+      let token = "";
+      const match = document.cookie.match(new RegExp('(^| )hanko=([^;]+)'));
+      if (match) token = match[2];
+
+      const headers: any = { "Content-Type": "application/json" };
+      if (token) {
+          headers["Authorization"] = `Bearer ${token}`;
+      }
+
       const res = await fetch("/api/generate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ code, apiKey }),
       });
 
@@ -110,6 +144,16 @@ export default function Home() {
         </div>
 
         <div className="flex items-center gap-2">
+            {hankoApi && (
+                 <Link 
+                    href="/login"
+                    className="p-2 rounded-md hover:bg-accent text-muted-foreground transition-colors flex items-center gap-2 text-sm font-medium"
+                 >
+                    {isLoggedIn ? <User size={20} /> : <LogIn size={20} />}
+                    <span className="hidden sm:inline">{isLoggedIn ? "My Account" : "Login"}</span>
+                </Link>
+            )}
+            
             <button
                 onClick={() => setShowSettings(!showSettings)}
                 className="p-2 rounded-md hover:bg-accent text-muted-foreground transition-colors"
@@ -178,7 +222,7 @@ export default function Home() {
                 {diagrams.length > 0 && (
                     <button
                         onClick={exportAll}
-                        className="text-xs flex items-center gap-1 hover:underline text-muted-foreground"
+                        className="flex items-center gap-2 text-sm bg-secondary hover:bg-secondary/80 text-secondary-foreground px-3 py-1.5 rounded-md transition-colors"
                     >
                         <Download size={16} />
                         Export All

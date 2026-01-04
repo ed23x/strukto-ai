@@ -1,0 +1,35 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// Stores the actual diagram data (Unique by code content)
+model DiagramEntry {
+  id        String   @id @default(uuid())
+  hash      String   @unique
+  code      String
+  json      Json     // Native JSON type for Postgres
+  createdAt DateTime @default(now())
+
+  // Relations
+  savedBy   UserSavedDiagram[]
+}
+
+// Links a specific user to a diagram (For "My Diagrams")
+model UserSavedDiagram {
+  id        String   @id @default(uuid())
+  userId    String
+  diagramId String
+  diagram   DiagramEntry @relation(fields: [diagramId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([userId, diagramId])
+}
