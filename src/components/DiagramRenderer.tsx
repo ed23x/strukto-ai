@@ -16,13 +16,6 @@ export const DiagramRenderer: React.FC<DiagramRendererProps> = ({
   node,
   isRoot = false,
 }) => {
-  const commonClasses = cn(
-    "flex flex-col w-full text-sm",
-    TextClass,
-    !isRoot && "border-t-0", // Prevent double borders
-    isRoot && `border-2 ${BorderClass}`
-  );
-
   // Helper to ensure we render a sequence properly
   const renderChildren = (children?: DiagramNode[]) => {
     if (!children || children.length === 0) return null;
