@@ -25,8 +25,10 @@ export default function LoginPage() {
      if (!hanko) return;
 
      // Check if already logged in
-     hanko.user.getCurrent().then(() => {
-         router.replace("/app");
+     hanko.validateSession().then((session) => {
+        if (session.is_valid) {
+            router.replace("/app");
+        }
      }).catch(() => {
          // Not logged in, stay here
      });

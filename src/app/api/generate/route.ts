@@ -2,29 +2,7 @@ import OpenAI from "openai";
 import { NextResponse } from "next/server";
 import { DiagramResponse } from "@/types/diagram";
 import { prisma } from "@/lib/prisma";
-import { createRemoteJWKSet, jwtVerify } from "jose";
 import crypto from "crypto";
-
-// Helper to verify Hanko Token
-async function getUserId(req: Request): Promise<string | null> {
-  try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) return null;
-
-    const token = authHeader.split(" ")[1];
-    const hankoApiUrl = process.env.NEXT_PUBLIC_HANKO_API_URL;
-
-    if (!hankoApiUrl) return null;
-
-    const JWKS = createRemoteJWKSet(new URL(`${hankoApiUrl}/.well-known/jwks.json`));
-    const { payload } = await jwtVerify(token, JWKS);
-    
-    return payload.sub || null;
-  } catch (error) {
-    console.warn("Auth verification failed:", error);
-    return null;
-  }
-}
 
 export async function POST(req: Request) {
   try {
@@ -110,34 +88,34 @@ export async function POST(req: Request) {
         data: {
           hash,
           code,
-          json: data as object
+          json: JSON.stringify(data)
         }
       });
     }
 
     // 4. Link to User (if logged in)
-    const userId = await getUserId(req);
-    if (userId && diagramEntry) {
-       // Check if already saved
-       const existingLink = await prisma.userSavedDiagram.findUnique({
-         where: {
-           userId_diagramId: {
-             userId,
-             diagramId: diagramEntry.id
-           }
-         }
-       });
+    // const userId = await getUserId(req);
+    // if (userId && diagramEntry) {
+    //    // Check if already saved
+    //    const existingLink = await prisma.userSavedDiagram.findUnique({
+    //      where: {
+    //        userId_diagramId: {
+    //          userId,
+    //          diagramId: diagramEntry.id
+    //        }
+    //      }
+    //    });
 
-       if (!existingLink) {
-         await prisma.userSavedDiagram.create({
-           data: {
-             userId,
-             diagramId: diagramEntry.id
-           }
-         });
-         console.log(`Auto-saved diagram ${diagramEntry.id} for user ${userId}`);
-       }
-    }
+    //    if (!existingLink) {
+    //      await prisma.userSavedDiagram.create({
+    //        data: {
+    //          userId,
+    //          diagramId: diagramEntry.id
+    //        }
+    //      });
+    //      console.log(`Auto-saved diagram ${diagramEntry.id} for user ${userId}`);
+    //    }
+    // }
 
     return NextResponse.json(data);
   } catch (error: unknown) {

@@ -6,9 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider  = "sqlite"
 }
 
 // Stores the actual diagram data (Unique by code content)
@@ -16,20 +14,6 @@ model DiagramEntry {
   id        String   @id @default(uuid())
   hash      String   @unique
   code      String
-  json      Json     // Native JSON type for Postgres
+  json      String   // Stored as a JSON string
   createdAt DateTime @default(now())
-
-  // Relations
-  savedBy   UserSavedDiagram[]
-}
-
-// Links a specific user to a diagram (For "My Diagrams")
-model UserSavedDiagram {
-  id        String   @id @default(uuid())
-  userId    String
-  diagramId String
-  diagram   DiagramEntry @relation(fields: [diagramId], references: [id])
-  createdAt DateTime @default(now())
-
-  @@unique([userId, diagramId])
 }
