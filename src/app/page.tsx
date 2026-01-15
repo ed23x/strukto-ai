@@ -7,7 +7,6 @@ import { Diagram, DiagramResponse } from "@/types/diagram";
 import { DiagramRenderer } from "@/components/DiagramRenderer";
 import { toPng } from "html-to-image";
 import { toast } from "sonner";
-import { SavedDiagrams } from "@/components/diagram-storage/SavedDiagrams";
 import { 
   Moon, 
   Sun, 
@@ -16,10 +15,10 @@ import {
   Settings, 
   Loader2, 
   FileCode,
-  Image as ImageIcon,
-  Save
+  Image as ImageIcon
 } from "lucide-react";
-import { UserProfile } from "@/components/auth/UserProfile";
+import { cn } from "@/lib/utils";
+import { SavedDiagrams } from "@/components/diagram-storage/SavedDiagrams";
 import { cn } from "@/lib/utils";
 
 export default function Home() {
@@ -287,6 +286,57 @@ export default function Home() {
             currentDiagrams={diagrams}
           />
         </div>
+
+        {/* Mobile Saved Diagrams */}
+        <div className="lg:hidden border-t p-4 bg-muted/20">
+        <SavedDiagrams 
+            onLoadDiagram={loadDiagram}
+            currentCode={code}
+            currentDiagrams={diagrams}
+          />
+        </div>
+
+        {/* Quick Links for Authenticated Users */}
+        {user && (
+          <div className="hidden lg:block w-80 p-4 border-l bg-muted/20">
+            <h3 className="font-semibold text-lg mb-4">Quick Actions</h3>
+            <div className="space-y-2">
+              <a 
+                href="/dashboard" 
+                className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              >
+                Dashboard
+              </a>
+              <a 
+                href="/profile" 
+                className="flex items-center gap-2 px-3 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+              >
+                Profile
+              </a>
+            </div>
+          </div>
+        )}
+
+        {/* Mobile Quick Actions */}
+        {user && (
+          <div className="lg:hidden border-t p-4 bg-muted/20">
+            <h3 className="font-semibold text-lg mb-4">Quick Actions</h3>
+            <div className="space-y-2">
+              <a 
+                href="/dashboard" 
+                className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              >
+                Dashboard
+              </a>
+              <a 
+                href="/profile" 
+                className="flex items-center gap-2 px-3 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+              >
+                Profile
+              </a>
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Mobile Saved Diagrams */}
