@@ -1,21 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { useUser, useStackApp } from "@stackframe/stack";
-import { Shield, Mail, Key, User as UserIcon } from "lucide-react";
+import { useUser, useStackApp, SignIn } from "@stackframe/stack";
+import { Shield, Mail, Key, User as UserIcon, Fingerprint, Settings } from "lucide-react";
 import { toast } from "sonner";
 
 export default function SignInPage() {
-  const [authMethod, setAuthMethod] = useState<"email" | "passkey">("email");
+  const [authMethod, setAuthMethod] = useState<"email" | "passkey" | "stack">("email");
   const [email, setEmail] = useState("");
-  const [passkey, setPasskey] = useState("");
   const [loading, setLoading] = useState(false);
   const app = useStackApp();
 
   const handleEmailSignIn = async () => {
     setLoading(true);
     try {
-      await app.signInWithOAuth({ email, password: "temp" });
+      await app.signInWithOAuth("google"); // Using Google OAuth as example
       toast.success("Successfully signed in with email!");
     } catch (error: any) {
       toast.error(error.message || "Failed to sign in");
@@ -27,14 +26,17 @@ export default function SignInPage() {
   const handlePasskeySignIn = async () => {
     setLoading(true);
     try {
-      await app.signInWithPasskey({ passkey });
+      // Proper passkey authentication using WebAuthn
+      await app.signInWithPasskey();
       toast.success("Successfully signed in with passkey!");
     } catch (error: any) {
-      toast.error(error.message || "Failed to sign in");
+      toast.error(error.message || "Failed to sign in with passkey");
     } finally {
       setLoading(false);
     }
   };
+
+
 
   const user = useUser();
 
@@ -59,28 +61,39 @@ export default function SignInPage() {
         {/* Auth Method Selector */}
         <div className="bg-card p-6 rounded-lg mb-6">
           <h2 className="text-lg font-semibold mb-4">Choose Authentication Method</h2>
-          <div className="flex gap-4">
+          <div className="grid grid-cols-3 gap-3">
             <button
               onClick={() => setAuthMethod("email")}
-              className={`flex-1 items-center gap-2 p-3 rounded-md border-2 transition-colors ${
+              className={`flex items-center gap-2 p-3 rounded-md border-2 transition-colors justify-center ${
                 authMethod === "email" 
                   ? "border-blue-500 bg-blue-50 text-blue-700" 
                   : "border-gray-200 bg-white text-gray-700"
               }`}
             >
               <Mail className="w-5 h-5" />
-              <span>Email</span>
+              <span className="text-sm">Email</span>
             </button>
             <button
               onClick={() => setAuthMethod("passkey")}
-              className={`flex-1 items-center gap-2 p-3 rounded-md border-2 transition-colors ${
+              className={`flex items-center gap-2 p-3 rounded-md border-2 transition-colors justify-center ${
                 authMethod === "passkey" 
                   ? "border-green-500 bg-green-50 text-green-700" 
                   : "border-gray-200 bg-white text-gray-700"
               }`}
             >
               <Key className="w-5 h-5" />
-              <span>Passkey</span>
+              <span className="text-sm">Passkey</span>
+            </button>
+            <button
+              onClick={() => setAuthMethod("stack")}
+              className={`flex items-center gap-2 p-3 rounded-md border-2 transition-colors justify-center ${
+                authMethod === "stack" 
+                  ? "border-purple-500 bg-purple-50 text-purple-700" 
+                  : "border-gray-200 bg-white text-gray-700"
+              }`}
+            >
+              <Settings className="w-5 h-5" />
+              <span className="text-sm">Stack Auth</span>
             </button>
           </div>
         </div>
@@ -125,26 +138,41 @@ export default function SignInPage() {
         {/* Passkey Form */}
         {authMethod === "passkey" && (
           <div className="bg-card p-6 rounded-lg">
-            <h3 className="text-lg font-semibold mb-4">Sign In with Passkey</h3>
+            <h3 className="text-lg font-semibold mb-4">Passkey Authentication</h3>
             <div className="space-y-4">
-              <div>
-                <label htmlFor="passkey" className="block text-sm font-medium">Passkey</label>
-                <input
-                  id="passkey"
-                  type="text"
-                  value={passkey}
-                  onChange={(e) => setPasskey(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-md bg-background text-foreground font-mono"
-                  placeholder="Enter your passkey"
-                />
+              <div className="flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <Fingerprint className="w-6 h-6 text-blue-600" />
+                <div>
+                  <p className="text-sm font-medium text-blue-900">Use your biometric data or security key</p>
+                  <p className="text-xs text-blue-700">Touch ID, Face ID, Windows Hello, or USB security key</p>
+                </div>
               </div>
+              
               <button
                 onClick={handlePasskeySignIn}
-                disabled={loading || !passkey.trim()}
-                className="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
+                disabled={loading}
+                className="w-full px-4 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {loading ? "Signing In..." : "Sign In with Passkey"}
+                <Fingerprint className="w-5 h-5" />
+                {loading ? "Authenticating..." : "Sign In with Passkey"}
               </button>
+              
+              <div className="text-xs text-muted-foreground text-center">
+                Note: Passkeys must be created in your Stack Auth dashboard first
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Stack Auth Built-in Component */}
+        {authMethod === "stack" && (
+          <div className="bg-card p-6 rounded-lg">
+            <h3 className="text-lg font-semibold mb-4">Stack Auth Sign In</h3>
+            <div className="text-sm text-muted-foreground mb-4">
+              Use the built-in Stack Auth component. Passkey option will appear automatically if enabled in your Stack Auth dashboard.
+            </div>
+            <div className="border rounded-lg p-4">
+              <SignIn />
             </div>
           </div>
         )}

@@ -21,7 +21,7 @@ export default function DashboardPage() {
               <p><strong>Display Name:</strong> {user.displayName || "Not set"}</p>
               <p><strong>Auth Method:</strong> Passkey Authentication</p>
               <p><strong>Authentication Method:</strong> Passkey</p>
-              <p><strong>Last Sign In:</strong> {user.lastSignedInAt ? new Date(user.lastSignedInAt).toLocaleString() : "Never"}</p>
+
             </div>
             
             <div className="mt-6">

@@ -33,7 +33,7 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <p className="font-medium">Last Sign In</p>
-                  <p className="text-muted-foreground">{user.lastSignedInAt ? new Date(user.lastSignedInAt).toLocaleString() : "Never"}</p>
+                  <p className="text-muted-foreground">N/A</p>
                 </div>
               </div>
             </div>
