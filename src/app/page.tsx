@@ -2,10 +2,12 @@
 
 import React, { useState, useRef } from "react";
 import { useTheme } from "next-themes";
+import { useUser } from "@stackframe/stack";
 import { Diagram, DiagramResponse } from "@/types/diagram";
 import { DiagramRenderer } from "@/components/DiagramRenderer";
 import { toPng } from "html-to-image";
 import { toast } from "sonner";
+import { SavedDiagrams } from "@/components/diagram-storage/SavedDiagrams";
 import { 
   Moon, 
   Sun, 
@@ -14,19 +16,23 @@ import {
   Settings, 
   Loader2, 
   FileCode,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Save
 } from "lucide-react";
+import { UserProfile } from "@/components/auth/UserProfile";
 import { cn } from "@/lib/utils";
 
 export default function Home() {
   const { theme, setTheme } = useTheme();
+  const user = useUser();
   const [code, setCode] = useState("// Write your code here...\nfunction example() {\n  if (x > 0) {\n    print('Hello');\n  } else {\n    print('World');\n  }\n}");
   const [diagrams, setDiagrams] = useState<Diagram[]>([]);
   const [loading, setLoading] = useState(false);
   const [apiKey, setApiKey] = useState("");
   const [showSettings, setShowSettings] = useState(false);
+  const [autosaving, setAutosaving] = useState(false);
 
-  // Generate Diagrams
+// Generate Diagrams
   const handleGenerate = async () => {
     if (!code.trim()) {
       toast.error("Please enter some code");
@@ -50,6 +56,11 @@ export default function Home() {
       if (data.diagrams) {
         setDiagrams(data.diagrams);
         toast.success(`Generated ${data.diagrams.length} diagrams`);
+        
+        // Autosave if user is logged in
+        if (user) {
+          autosaveDiagrams(code, data.diagrams);
+        }
       } else {
         toast.error("Invalid response format");
       }
@@ -98,18 +109,64 @@ export default function Home() {
     }
   };
 
+  // Load Diagram
+  const loadDiagram = (code: string, diagrams: Diagram[]) => {
+    setCode(code);
+    setDiagrams(diagrams);
+  };
+
+  // Autosave all generated diagrams
+  const autosaveDiagrams = async (sourceCode: string, generatedDiagrams: Diagram[]) => {
+    if (!user || generatedDiagrams.length === 0) return;
+
+    setAutosaving(true);
+    try {
+      // Create a title based on the code or use a default
+      const title = sourceCode.trim().split('\n')[0].replace(/^(function|class|def|const|let|var)\s+/, '').split('(')[0].split('{')[0].trim() || "Auto-saved Diagrams";
+      
+      const response = await fetch("/api/diagrams", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: `${title} (${new Date().toLocaleDateString()})`,
+          sourceCode,
+          diagramData: generatedDiagrams,
+        }),
+      });
+
+      const { diagram } = await response.json();
+      if (!response.ok) {
+        throw new Error(diagram.error || "Failed to autosave diagrams");
+      }
+
+      toast.success(`Auto-saved ${generatedDiagrams.length} diagram(s) to your account`);
+    } catch (error: any) {
+      console.error("Autosave failed:", error);
+      // Don't show error toast for autosave failures to not interrupt user experience
+    } finally {
+      setAutosaving(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300">
       {/* Header */}
       <header className="flex items-center justify-between p-4 border-b bg-card">
-        <div className="flex items-center gap-2">
-           <div className="p-2 bg-primary text-primary-foreground rounded-lg">
-             <FileCode size={24} />
-           </div>
-           <h1 className="text-xl font-bold tracking-tight">Struckto AI</h1>
-        </div>
+<div className="flex items-center gap-2">
+            <div className="p-2 bg-primary text-primary-foreground rounded-lg">
+              <FileCode size={24} />
+            </div>
+            <h1 className="text-xl font-bold tracking-tight">Struckto AI</h1>
+            {autosaving && (
+              <div className="flex items-center gap-1 text-xs text-muted-foreground animate-pulse">
+                <Save size={14} />
+                <span>Auto-saving...</span>
+              </div>
+            )}
+         </div>
 
         <div className="flex items-center gap-2">
+            <UserProfile />
             <button
                 onClick={() => setShowSettings(!showSettings)}
                 className="p-2 rounded-md hover:bg-accent text-muted-foreground transition-colors"
@@ -222,7 +279,24 @@ export default function Home() {
             </div>
         </div>
 
+        {/* Saved Diagrams Sidebar */}
+        <div className="hidden lg:block w-80 p-4 border-l bg-muted/20">
+<SavedDiagrams 
+            onLoadDiagram={loadDiagram}
+            currentCode={code}
+            currentDiagrams={diagrams}
+          />
+        </div>
       </main>
+
+      {/* Mobile Saved Diagrams */}
+      <div className="lg:hidden border-t p-4 bg-muted/20">
+<SavedDiagrams 
+            onLoadDiagram={loadDiagram}
+            currentCode={code}
+            currentDiagrams={diagrams}
+          />
+      </div>
     </div>
   );
 }

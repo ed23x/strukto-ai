@@ -1,9 +1,18 @@
 import OpenAI from "openai";
 import { NextResponse } from "next/server";
 import { DiagramResponse } from "@/types/diagram";
+import { stackServerApp } from "@/stack/server";
 
 export async function POST(req: Request) {
   try {
+    const user = await stackServerApp.getUser();
+    if (!user) {
+      return NextResponse.json(
+        { error: "Authentication required. Please sign in." },
+        { status: 401 }
+      );
+    }
+
     const { code, apiKey } = await req.json();
 
     const key = apiKey || process.env.OPENROUTER_API_KEY;

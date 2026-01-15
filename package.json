@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@stackframe/stack": "^2.8.58",
+    "@supabase/supabase-js": "^2.90.1",
     "clsx": "^2.1.1",
     "html-to-image": "^1.11.13",
     "lucide-react": "^0.562.0",
