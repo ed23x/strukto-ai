@@ -57,7 +57,7 @@ export async function POST(req: Request) {
     `;
 
     const completion = await openai.chat.completions.create({
-      model: "xiaomi/mimo-v2-flash:free",
+      model: process.env.OPENROUTER_MODEL || "xiaomi/mimo-v2-flash:free",
       messages: [
         {
           role: "user",
